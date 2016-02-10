@@ -80,11 +80,8 @@ fn write_to_xml<O: Write>(input: shn::ShnFile, output: O) {
 
     // TODO: better error handling.
     writer.write(start_doc_element).ok();
-
     write_shn_schema_to_xml(&input, &mut writer);
-
-    // todo: write data
-
+    write_shn_data_to_xml(&input, &mut writer);
     writer.write(XmlEvent::EndElement { name: None }).ok();
 }
 
@@ -102,6 +99,24 @@ fn write_shn_schema_to_xml<O: Write>(input: &shn::ShnFile, output: &mut EventWri
     }
 
     output.write(XmlEvent::EndElement { name: None }).ok();
+}
+
+fn write_shn_data_to_xml<O: Write>(input: &shn::ShnFile, output: &mut EventWriter<O>) {
+    for row in input.data.iter() {
+        write_row_to_xml(row, input, output);
+    }
+}
+
+fn write_row_to_xml<O: Write>(row: &shn::ShnRow, file: &shn::ShnFile, output: &mut EventWriter<O>) {
+    let mut attrs = Vec::with_capacity(row.data.len());
+    for i in 0..file.schema.columns.len() {
+        let col = file.schema.columns.get(i).unwrap();
+        let cell = row.data.get(i).unwrap();
+        let cell_value = cell_to_str(cell);
+        attrs.push(xml::attribute::Attribute::new(
+            xml::name::Name::local(&col.name),
+            &cell_value));
+    }
 }
 
 fn write_column<O: Write>(column: &shn::ShnColumn, output: &mut EventWriter<O>) {
@@ -141,4 +156,18 @@ fn bytes_to_string(bytes: &[u8]) -> String {
         s.push_str(&(format!("{:x}", bytes[i])));
     };
     s
+}
+
+fn cell_to_str(cell: &shn::ShnCell) -> String {
+    match cell {
+        &shn::ShnCell::StringFixedLen(ref s) => s.to_string(),
+        &shn::ShnCell::StringZeroTerminated(ref s) => s.to_string(),
+        &shn::ShnCell::Byte(ref b) => b.to_string(),
+        &shn::ShnCell::SignedByte(ref b) => b.to_string(),
+        &shn::ShnCell::UnsignedShort(ref s) => s.to_string(),
+        &shn::ShnCell::SignedShort(ref s) => s.to_string(),
+        &shn::ShnCell::UnsignedInteger(ref i) => i.to_string(),
+        &shn::ShnCell::SignedInteger(ref i) => i.to_string(),
+        &shn::ShnCell::SingleFloatingPoint(ref f) => f.to_string()
+    }
 }
