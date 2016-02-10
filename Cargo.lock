@@ -3,6 +3,7 @@ name = "shn2xml"
 version = "0.1.0"
 dependencies = [
  "docopt 0.6.78 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding 0.2.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "shn 0.1.0 (git+https://github.com/skeleten/shn-rs)",
  "xml-rs 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
