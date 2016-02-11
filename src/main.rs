@@ -113,10 +113,18 @@ fn write_row_to_xml<O: Write>(row: &shn::ShnRow, file: &shn::ShnFile, output: &m
         let col = file.schema.columns.get(i).unwrap();
         let cell = row.data.get(i).unwrap();
         let cell_value = cell_to_str(cell);
-        attrs.push(xml::attribute::Attribute::new(
-            xml::name::Name::local(&col.name),
-            &cell_value));
+        attrs.push(xml::attribute::OwnedAttribute::new(
+            xml::name::OwnedName::local(col.name.to_string()),
+            cell_value));
     }
+    let attrs: Vec<xml::attribute::Attribute> = attrs.iter().map(xml::attribute::OwnedAttribute::borrow).collect();
+
+    output.write(XmlEvent::StartElement {
+        name: xml::name::Name::local("row"),
+        attributes: Cow::Owned(attrs),
+        namespace: Cow::Owned(xml::namespace::Namespace::empty())
+    }).unwrap();
+    output.write(XmlEvent::EndElement { name: None }).unwrap();
 }
 
 fn write_column<O: Write>(column: &shn::ShnColumn, output: &mut EventWriter<O>) {
