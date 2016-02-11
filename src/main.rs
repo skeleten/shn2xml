@@ -35,7 +35,7 @@ fn main() {
     let output: Box<Write> = if args.get_bool("--stdout") {
         Box::new(std::io::stdout())
     } else {
-        Box::new(open_file(args.get_str("<output")))
+        Box::new(create_file(args.get_str("<output")))
     };
     let encoding = get_encoding(&args);
 
@@ -67,6 +67,13 @@ fn open_file<P: AsRef<Path>>(path: P) -> File {
     match std::fs::File::open(path) {
         Ok(f) => f,
         Err(e) => panic!("Could not open file: {}", e),
+    }
+}
+
+fn create_file<P: AsRef<Path>>(path: P) -> File {
+    match std::fs::OpenOptions::new().write(true).create(true).open(path) {
+        Ok(f) => f,
+        Err(e) => panic!("Could not create file: {}", e),
     }
 }
 
